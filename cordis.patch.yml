@@ -1,0 +1,56 @@
+# The @argszero/cordis-plugin-workspace-membership-doctor bundle patch: mount
+# and go. Nothing to configure.
+#
+# A durable workspace record lists its sessions, and the registry keeps that
+# list honest by filtering it through a canonical-cwd header index built at
+# startup (`packages/workspace/workspace/src/entity.ts`):
+#
+#   get sessionIds() {
+#     return this.record.sessionIds.filter(id => this.host.sessionPath(id) === this.record.path)
+#   }
+#
+# and the single write path re-applies the same filter before persisting —
+# `mutate` prunes every id whose indexed canonical cwd is not the workspace's
+# own path. The index is built once, from `sessionPersistence.list()`, at
+# `Service.init`. So a session whose stored `cwd` did not resolve *at that
+# instant* — a boot still migrating session logs, a directory that was
+# temporarily unreadable, a mount that was not up yet — is invisible to the
+# projection, and the next write to that record, for any reason at all, drops
+# it from the durable record:
+#
+#   workspace '<id>' filtered session '<id>' from membership: cwd '<x>' does not resolve
+#
+# That warning is the only trace. The session keeps its stored header, its
+# directory is still the workspace's own directory, and nothing in the product
+# ever puts it back: it appears as "Ungrouped", and the grouping the user did
+# is gone. The capability to restore it is already public and already used by
+# other flows (`Workspace.attachSession`), so no core change is needed to
+# heal this — only a census that notices, and a caller who asks.
+#
+# This plugin supplies both. On mount it takes a census of stored headers
+# against the published workspaces, using the registry's own canonicalizer so
+# its classification cannot disagree with the index that did the filtering,
+# and logs a warning naming what it found. It then registers one tool:
+#
+#   workspace_membership                      report (writes nothing)
+#   workspace_membership action=repair        returns the plan, writes nothing
+#   workspace_membership action=repair confirm=true
+#                                             re-attaches the candidates
+#
+# The repair calls the registry's existing `attachSession`, which re-reads the
+# stored header and re-validates the cwd itself, so a plan built from a stale
+# snapshot cannot write a wrong membership — a step the registry refuses is
+# reported with its own message, verbatim, and the rest of the plan runs.
+#
+# Nothing is written automatically, at startup or otherwise. A deliberate
+# `detachSession` and a silent prune leave the same records behind, so an
+# unattended repair would undo the first while fixing the second. The doctor
+# hands the user the list and the reason; only `confirm: true` writes.
+#
+# Every report carries a coverage block (workspaces read, headers read, cwd
+# resolved, matched, ungrouped). A diagnosis that can print "0 candidates"
+# after reading nothing is worse than no diagnosis at all.
+
+- insert:
+    - id: workspace-membership-doctor
+      name: '@argszero/cordis-plugin-workspace-membership-doctor'
