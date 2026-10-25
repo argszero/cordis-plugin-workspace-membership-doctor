@@ -92,11 +92,11 @@ Three things it states outright that it **cannot** tell apart:
 ## Install
 
 ```sh
-npm install @argszero/cordis-plugin-workspace-membership-doctor
+dsh plugin add github:argszero/cordis-plugin-workspace-membership-doctor
 ```
 
-then mount it as above (the package declares `dsh.bundle.patch`, so adding the
-package to a profile's composition is enough).
+The package declares `dsh.bundle.patch`, so the verb installs it and attaches it
+to the profile's composition in one step.
 
 ## Requirements
 
@@ -105,17 +105,17 @@ package to a profile's composition is enough).
 - `@deepseek-ai/dsh-workspace`, `@deepseek-ai/dsh-session-persistence`,
   `@deepseek-ai/dsh-tools`, `@deepseek-ai/dsh-session` — peers, resolved from the
   running harness, each declared as
-  `>=0.1.7-alpha.1 <0.1.7-rc.1 || >=0.2.0-rc.1 <0.2.0`
+  `>=0.1.7-alpha.1 <0.1.7-rc.1 || >=0.2.0-rc.1 <0.2.0 || >=0.2.1-rc.1 <0.2.1`
 
 No runtime dependencies of its own.
 
-### Why that range has two spans
+### Why that range has three spans
 
 The harness publishes several prerelease lines at once (`alpha`, `next`, plus
 untagged builds), and a peer range is a claim about which of them this plugin
 was actually tested on. The obvious spelling — `>=0.1.7-alpha.1 <0.2.0` — admits
 the `0.1.7-rc.*` line too, which the suite has never been run against. So the
-range names the two lines that were run, and
+range names the three lines that were run, and
 `npm run test:probe-lines` fails if the declaration and the run list drift apart
 (it also refuses a range that admits a build the suite never measured).
 
@@ -123,6 +123,7 @@ range names the two lines that were run, and
 |------|------------------------|
 | `0.1.7-alpha` | `0.1.7-alpha.2` |
 | `0.2.0-rc` | `0.2.0-rc.2` |
+| `0.2.1-rc` | `0.2.1-rc.3` |
 
 Each line was run in a clean tree (`rm -rf node_modules package-lock.json`, then
 install that line's four packages, then `npm test`) — installing a line on top

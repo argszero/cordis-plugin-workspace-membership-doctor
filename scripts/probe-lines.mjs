@@ -44,6 +44,13 @@ const RUN_LINES = [
     version: '0.2.0-rc.2',
     how: 'rm -rf node_modules package-lock.json && npm i && npm test',
   },
+  {
+    line: '0.2.1-rc',
+    version: '0.2.1-rc.3',
+    how: 'rm -rf node_modules package-lock.json && npm i --no-save @deepseek-ai/dsh-session@0.2.1-rc.3'
+      + ' @deepseek-ai/dsh-session-persistence@0.2.1-rc.3 @deepseek-ai/dsh-tools@0.2.1-rc.3'
+      + ' @deepseek-ai/dsh-workspace@0.2.1-rc.3 && npm test',
+  },
 ]
 
 /** Versions whose membership is the whole point of the range's shape. */
@@ -56,6 +63,9 @@ const TABLE = [
   ['0.2.0-rc.1', true, 'the rc line'],
   ['0.2.0-rc.2', true, 'the rc line, and the build the suite ran on'],
   ['0.2.0', false, 'a release never run'],
+  ['0.2.1-rc.1', true, 'the 0.2.1 rc line'],
+  ['0.2.1-rc.3', true, 'the 0.2.1 rc line, and the build the suite ran on'],
+  ['0.2.1', false, 'a release never run'],
   ['0.3.0', false, 'a later line'],
   ['0.1.6-alpha.9', false, 'a line older than the workspace registry API this plugin uses'],
 ]
